@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Pokemon App</string>
+    <!--  LABEL  -->
+    <string name="lbl_username">Username</string>
+    <string name="lbl_password">Password</string>
+    <string name="lbl_retype_password">Retype Password</string>
+
+    <!--  BUTTON  -->
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
+
+    <!--  MESSAGE  -->
+    <string name="msg_validation_username">Minimum 5 characters</string>
+    <string name="msg_validation_password">Retyped password does not match</string>
+
+    <!--  CONTENT DESCRIPTION  -->
+    <string name="content_desc_back_button">Back button</string>
+    <string name="content_desc_toggle_password">Toggle password</string>
+    <string name="content_desc_toggle_retype_password">Toggle retype password</string>
+</resources>
