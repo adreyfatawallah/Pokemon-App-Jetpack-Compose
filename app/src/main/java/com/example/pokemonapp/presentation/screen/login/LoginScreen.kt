@@ -12,29 +12,48 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pokemonapp.R
+import com.example.pokemonapp.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
+import com.example.pokemonapp.util.MySnackbarHost
 
 @Composable
 fun LoginScreen(
     navigateToRegister: () -> Unit
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val viewModel = viewModel<LoginViewModel>()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold { innerPadding ->
+    val username = viewModel.username
+    val password = viewModel.password
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect {event ->
+            when(event) {
+                is LoginEvent.CallBack -> {
+                    snackbarHostState.showSnackbar(message = event.message)
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = {
+            MySnackbarHost(snackbarHostState)
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -50,26 +69,22 @@ fun LoginScreen(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = username,
-                onValueChange = {
-                    username = it
-                },
+                onValueChange = viewModel::updateUsername,
                 label = { Text(stringResource(R.string.lbl_username)) },
             )
-            OutlinedTextField(
+            PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.lbl_password),
                 value = password,
-                onValueChange = {
-                    password = it
-                },
-                label = { Text(stringResource(R.string.lbl_password)) },
+                onValueChange = viewModel::updatePassword,
+                contentDescription = stringResource(R.string.content_desc_toggle_password),
             )
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 modifier = defaultButtonModifier
                     .fillMaxWidth(),
-                onClick = {
-
-                }
+                enabled = username.isNotEmpty() && password.isNotEmpty(),
+                onClick = viewModel::login
             ) {
                 Text(text = stringResource(R.string.btn_login))
             }

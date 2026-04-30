@@ -18,10 +18,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +35,9 @@ import com.example.pokemonapp.R
 import com.example.pokemonapp.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
+import com.example.pokemonapp.util.MySnackbarHost
+import com.example.pokemonapp.util.resultWithAction
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +45,8 @@ fun RegisterScreen(
     navigateBack: () -> Unit,
 ) {
     val viewModel = viewModel<RegisterViewModel>()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val username = viewModel.username
     val password = viewModel.password
@@ -47,7 +56,15 @@ fun RegisterScreen(
     val isPasswordValid = viewModel.isPasswordValid
     val isPasswordMatch = viewModel.isPasswordMatch
 
+    val lblOK = stringResource(R.string.lbl_OK)
+
+    val msgSuccess = stringResource(R.string.msg_register_success)
+    val msgFailure = stringResource(R.string.msg_register_failure)
+
     Scaffold(
+        snackbarHost = {
+            MySnackbarHost(snackbarHostState)
+        },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -98,7 +115,7 @@ fun RegisterScreen(
                 isError = password.isNotEmpty() && !isPasswordValid,
                 supportingText = {
                     if (password.isNotEmpty() && !isPasswordValid) {
-                        Text(stringResource(R.string.msg_validation_username))
+                        Text(stringResource(R.string.msg_validation_password))
                     }
                 }
             )
@@ -111,7 +128,7 @@ fun RegisterScreen(
                 isError = retypePassword.isNotEmpty() && !isPasswordMatch,
                 supportingText = {
                     if (retypePassword.isNotEmpty() && !isPasswordMatch) {
-                        Text(stringResource(R.string.msg_validation_password))
+                        Text(stringResource(R.string.msg_validation_retype_password))
                     }
                 }
             )
@@ -120,7 +137,24 @@ fun RegisterScreen(
                 modifier = defaultButtonModifier
                     .fillMaxWidth(),
                 enabled = isUsernameValid && isPasswordValid && isPasswordMatch,
-                onClick = { },
+                onClick = {
+                    scope.launch {
+                        val isRegisterSuccess = viewModel.register()
+
+                        if (isRegisterSuccess) {
+                            val result = snackbarHostState.showSnackbar(
+                                message = msgSuccess,
+                                actionLabel = lblOK,
+                                duration = SnackbarDuration.Short
+                            )
+                            resultWithAction(result, navigateBack)
+                        } else {
+                            snackbarHostState.showSnackbar(
+                                viewModel.errorRegister ?: msgFailure
+                            )
+                        }
+                    }
+                },
             ) {
                 Text(text = stringResource(R.string.btn_register))
             }

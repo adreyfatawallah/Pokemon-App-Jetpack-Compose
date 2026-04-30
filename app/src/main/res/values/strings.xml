@@ -4,6 +4,7 @@
     <string name="lbl_username">Username</string>
     <string name="lbl_password">Password</string>
     <string name="lbl_retype_password">Retype Password</string>
+    <string name="lbl_OK">OK</string>
 
     <!--  BUTTON  -->
     <string name="btn_login">Login</string>
@@ -11,7 +12,12 @@
 
     <!--  MESSAGE  -->
     <string name="msg_validation_username">Minimum 5 characters</string>
-    <string name="msg_validation_password">Retyped password does not match</string>
+    <string name="msg_validation_password">Minimum 5 characters</string>
+    <string name="msg_validation_retype_password">Retyped password does not match</string>
+    <string name="msg_register_success">Register success</string>
+    <string name="msg_register_failure">Register failure</string>
+    <string name="msg_login_success">Login succes, welcome %s</string>
+    <string name="msg_login_failure">Login failure, username or password do not match</string>
 
     <!--  CONTENT DESCRIPTION  -->
     <string name="content_desc_back_button">Back button</string>

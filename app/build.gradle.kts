@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.stability.analyzer)
+    alias(libs.plugins.app.cash.sqldelight)
 }
 
 android {
@@ -54,6 +57,8 @@ dependencies {
 
     implementation(libs.androidx.navigation)
 
+    implementation(libs.sqldelight.android)
+
     testImplementation(libs.junit)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -63,4 +68,12 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+sqldelight {
+    databases {
+        create("UserDatabase") {
+            packageName.set("com.example")
+        }
+    }
 }

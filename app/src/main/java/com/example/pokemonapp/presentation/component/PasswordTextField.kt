@@ -27,7 +27,7 @@ fun PasswordTextField(
     value: String,
     onValueChange: (String) -> Unit,
     contentDescription: String,
-    isError: Boolean,
+    isError: Boolean = false,
     supportingText: @Composable (() -> Unit)? = null,
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
