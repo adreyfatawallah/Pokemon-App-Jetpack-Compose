@@ -1,25 +1,27 @@
 package com.example.pokemonapp.presentation.screen.register
 
-import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import com.example.UserDatabase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.pokemonapp.data.local.user.UserDataSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+sealed class RegisterEvent {
+    data class OnRegister(val isSuccess: Boolean, val message: String? = null): RegisterEvent()
+}
 
 class RegisterViewModel(
-    application: Application
-): AndroidViewModel(application) {
+    private val userDataSource: UserDataSource
+): ViewModel() {
 
-    val driver: SqlDriver = AndroidSqliteDriver(
-        UserDatabase.Schema,
-        application.applicationContext,
-        "user.db"
-    )
-    val database = UserDatabase(driver)
-    val userQueries = database.userDatabaseQueries
+    private val _eventChannel = Channel<RegisterEvent>()
+    val events = _eventChannel.receiveAsFlow()
 
     var username by mutableStateOf("")
         private set
@@ -28,39 +30,33 @@ class RegisterViewModel(
     var retypePassword by mutableStateOf("")
         private set
 
-    var isUsernameValid by mutableStateOf(false)
-        private set
-    var isPasswordValid by mutableStateOf(false)
-        private set
-    var isPasswordMatch by mutableStateOf(false)
-        private set
-
-    var errorRegister: String? by mutableStateOf(null)
-        private set
+    val isUsernameValid get() = username.length > 4
+    val isPasswordValid get() = password.length > 4
+    val isPasswordMatch get() = password.isNotEmpty() && password == retypePassword
 
     fun updateUsername(string: String) {
         username = string
-        isUsernameValid = username.length > 4
     }
 
     fun updatePassword(string: String) {
         password = string
-        isPasswordValid = password.length > 4
-        isPasswordMatch = password == retypePassword
     }
 
     fun updateRetypePassword(string: String) {
         retypePassword = string
-        isPasswordMatch = password == retypePassword
     }
 
-    suspend fun register(): Boolean {
-        try {
-            val result = userQueries.insertUser(username = username, password = password).await()
-            return result > 0
-        } catch (e: Exception) {
-            errorRegister = e.message
-            return false
+    fun register() {
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    userDataSource.createUser(username = username, password = password)
+                }
+
+                _eventChannel.send(RegisterEvent.OnRegister(result > 0))
+            } catch (e: Exception) {
+                _eventChannel.send(RegisterEvent.OnRegister(false, e.message))
+            }
         }
     }
 }

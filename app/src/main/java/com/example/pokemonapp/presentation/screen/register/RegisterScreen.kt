@@ -24,42 +24,51 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pokemonapp.R
 import com.example.pokemonapp.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
 import com.example.pokemonapp.util.MySnackbarHost
 import com.example.pokemonapp.util.resultWithAction
-import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navigateBack: () -> Unit,
 ) {
-    val viewModel = viewModel<RegisterViewModel>()
+    val context = LocalContext.current
+
+    val viewModel = koinViewModel<RegisterViewModel>()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    val username = viewModel.username
-    val password = viewModel.password
-    val retypePassword = viewModel.retypePassword
-
-    val isUsernameValid = viewModel.isUsernameValid
-    val isPasswordValid = viewModel.isPasswordValid
-    val isPasswordMatch = viewModel.isPasswordMatch
-
-    val lblOK = stringResource(R.string.lbl_OK)
-
-    val msgSuccess = stringResource(R.string.msg_register_success)
-    val msgFailure = stringResource(R.string.msg_register_failure)
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when(event) {
+                is RegisterEvent.OnRegister -> {
+                    if (event.isSuccess) {
+                        val result = snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.msg_register_success),
+                            actionLabel = context.getString(R.string.lbl_OK),
+                            duration = SnackbarDuration.Short
+                        )
+                        resultWithAction(result, navigateBack)
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = event.message ?: context.getString(R.string.msg_register_failure)
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -95,12 +104,12 @@ fun RegisterScreen(
         ) {
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = username,
+                value = viewModel.username,
                 onValueChange = viewModel::updateUsername,
                 label = { Text(stringResource(R.string.lbl_username)) },
-                isError = username.isNotEmpty() && !isUsernameValid,
+                isError = viewModel.username.isNotEmpty() && !viewModel.isUsernameValid,
                 supportingText = {
-                    if (username.isNotEmpty() && !isUsernameValid) {
+                    if (viewModel.username.isNotEmpty() && !viewModel.isUsernameValid) {
                         Text(stringResource(R.string.msg_validation_username))
                     }
                 },
@@ -109,12 +118,12 @@ fun RegisterScreen(
             PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.lbl_password),
-                value = password,
+                value = viewModel.password,
                 onValueChange = viewModel::updatePassword,
                 contentDescription = stringResource(R.string.content_desc_toggle_password),
-                isError = password.isNotEmpty() && !isPasswordValid,
+                isError = viewModel.password.isNotEmpty() && !viewModel.isPasswordValid,
                 supportingText = {
-                    if (password.isNotEmpty() && !isPasswordValid) {
+                    if (viewModel.password.isNotEmpty() && !viewModel.isPasswordValid) {
                         Text(stringResource(R.string.msg_validation_password))
                     }
                 }
@@ -122,12 +131,12 @@ fun RegisterScreen(
             PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.lbl_retype_password),
-                value = retypePassword,
+                value = viewModel.retypePassword,
                 onValueChange = viewModel::updateRetypePassword,
                 contentDescription = stringResource(R.string.content_desc_toggle_retype_password),
-                isError = retypePassword.isNotEmpty() && !isPasswordMatch,
+                isError = viewModel.retypePassword.isNotEmpty() && !viewModel.isPasswordMatch,
                 supportingText = {
-                    if (retypePassword.isNotEmpty() && !isPasswordMatch) {
+                    if (viewModel.retypePassword.isNotEmpty() && !viewModel.isPasswordMatch) {
                         Text(stringResource(R.string.msg_validation_retype_password))
                     }
                 }
@@ -136,25 +145,8 @@ fun RegisterScreen(
             Button(
                 modifier = defaultButtonModifier
                     .fillMaxWidth(),
-                enabled = isUsernameValid && isPasswordValid && isPasswordMatch,
-                onClick = {
-                    scope.launch {
-                        val isRegisterSuccess = viewModel.register()
-
-                        if (isRegisterSuccess) {
-                            val result = snackbarHostState.showSnackbar(
-                                message = msgSuccess,
-                                actionLabel = lblOK,
-                                duration = SnackbarDuration.Short
-                            )
-                            resultWithAction(result, navigateBack)
-                        } else {
-                            snackbarHostState.showSnackbar(
-                                viewModel.errorRegister ?: msgFailure
-                            )
-                        }
-                    }
-                },
+                enabled = viewModel.isUsernameValid && viewModel.isPasswordValid && viewModel.isPasswordMatch,
+                onClick = viewModel::register,
             ) {
                 Text(text = stringResource(R.string.btn_register))
             }

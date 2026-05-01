@@ -11,11 +11,10 @@ composeBom = "2026.04.01"
 
 materialIcons = "1.7.8"
 uiTextGoogleFonts = "1.11.0"
-
 navigationCompose = "2.9.8"
-
 composeStabilityAnalyzer = "0.7.4"
 sqlDelight = "2.3.2"
+koin = "4.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,7 +37,13 @@ androidx-compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = 
 
 androidx-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
-sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
+app-cash-sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
+
+io-insert-koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koin" }
+io-insert-koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+io-insert-koin-compose = { group = "io.insert-koin", name = "koin-compose", version.ref = "koin" }
+io-insert-koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin" }
+io-insert-koin-androidx-navigation = { group = "io.insert-koin", name = "koin-androidx-compose-navigation", version.ref = "koin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

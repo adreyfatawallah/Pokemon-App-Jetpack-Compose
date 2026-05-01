@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,7 +58,13 @@ dependencies {
 
     implementation(libs.androidx.navigation)
 
-    implementation(libs.sqldelight.android)
+    implementation(libs.app.cash.sqldelight.android)
+
+    implementation(platform(libs.io.insert.koin.bom))
+    implementation(libs.io.insert.koin.android)
+    implementation(libs.io.insert.koin.compose)
+    implementation(libs.io.insert.koin.compose.viewmodel)
+    implementation(libs.io.insert.koin.androidx.navigation)
 
     testImplementation(libs.junit)
 
