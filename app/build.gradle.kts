@@ -4,6 +4,7 @@ plugins {
 
     alias(libs.plugins.stability.analyzer)
     alias(libs.plugins.app.cash.sqldelight)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -65,6 +66,10 @@ dependencies {
     implementation(libs.io.insert.koin.compose)
     implementation(libs.io.insert.koin.compose.viewmodel)
     implementation(libs.io.insert.koin.androidx.navigation)
+
+    implementation(libs.kotlinx.serialization)
+
+    implementation(libs.androidx.datastore)
 
     testImplementation(libs.junit)
 

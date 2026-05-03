@@ -1,4 +1,4 @@
-package com.example.pokemonapp.presentation.screen.register
+package com.example.pokemonapp.feature.auth.presentation.screen.register
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,19 +24,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pokemonapp.R
-import com.example.pokemonapp.presentation.component.PasswordTextField
+import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.util.MySnackbarHost
-import com.example.pokemonapp.util.resultWithAction
+import com.example.pokemonapp.component.MySnackbarHost
+import com.example.pokemonapp.util.ObserveAsEvents
+import com.example.pokemonapp.component.resultWithAction
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,12 +48,13 @@ fun RegisterScreen(
     navigateBack: () -> Unit,
 ) {
     val context = LocalContext.current
-
     val viewModel = koinViewModel<RegisterViewModel>()
+    val uiState by viewModel.uiState
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+    ObserveAsEvents(viewModel.events) { event ->
+        scope.launch {
             when(event) {
                 is RegisterEvent.OnRegister -> {
                     if (event.isSuccess) {
@@ -104,12 +108,12 @@ fun RegisterScreen(
         ) {
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = viewModel.username,
+                value = uiState.username,
                 onValueChange = viewModel::updateUsername,
                 label = { Text(stringResource(R.string.lbl_username)) },
-                isError = viewModel.username.isNotEmpty() && !viewModel.isUsernameValid,
+                isError = uiState.username.isNotEmpty() && !uiState.isUsernameValid,
                 supportingText = {
-                    if (viewModel.username.isNotEmpty() && !viewModel.isUsernameValid) {
+                    if (uiState.username.isNotEmpty() && !uiState.isUsernameValid) {
                         Text(stringResource(R.string.msg_validation_username))
                     }
                 },
@@ -118,12 +122,12 @@ fun RegisterScreen(
             PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.lbl_password),
-                value = viewModel.password,
+                value = uiState.password,
                 onValueChange = viewModel::updatePassword,
                 contentDescription = stringResource(R.string.content_desc_toggle_password),
-                isError = viewModel.password.isNotEmpty() && !viewModel.isPasswordValid,
+                isError = uiState.password.isNotEmpty() && !uiState.isPasswordValid,
                 supportingText = {
-                    if (viewModel.password.isNotEmpty() && !viewModel.isPasswordValid) {
+                    if (uiState.password.isNotEmpty() && !uiState.isPasswordValid) {
                         Text(stringResource(R.string.msg_validation_password))
                     }
                 }
@@ -131,12 +135,12 @@ fun RegisterScreen(
             PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.lbl_retype_password),
-                value = viewModel.retypePassword,
+                value = uiState.retypePassword,
                 onValueChange = viewModel::updateRetypePassword,
                 contentDescription = stringResource(R.string.content_desc_toggle_retype_password),
-                isError = viewModel.retypePassword.isNotEmpty() && !viewModel.isPasswordMatch,
+                isError = uiState.retypePassword.isNotEmpty() && !uiState.isPasswordMatch,
                 supportingText = {
-                    if (viewModel.retypePassword.isNotEmpty() && !viewModel.isPasswordMatch) {
+                    if (uiState.retypePassword.isNotEmpty() && !uiState.isPasswordMatch) {
                         Text(stringResource(R.string.msg_validation_retype_password))
                     }
                 }
@@ -145,7 +149,7 @@ fun RegisterScreen(
             Button(
                 modifier = defaultButtonModifier
                     .fillMaxWidth(),
-                enabled = viewModel.isUsernameValid && viewModel.isPasswordValid && viewModel.isPasswordMatch,
+                enabled = uiState.isUsernameValid && uiState.isPasswordValid && uiState.isPasswordMatch,
                 onClick = viewModel::register,
             ) {
                 Text(text = stringResource(R.string.btn_register))

@@ -1,4 +1,4 @@
-package com.example.pokemonapp.presentation.component
+package com.example.pokemonapp.feature.auth.presentation.component
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons

@@ -1,4 +1,4 @@
-package com.example.pokemonapp.util
+package com.example.pokemonapp.component
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime

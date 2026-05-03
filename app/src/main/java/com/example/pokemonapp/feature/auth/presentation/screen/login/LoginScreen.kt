@@ -1,4 +1,4 @@
-package com.example.pokemonapp.presentation.screen.login
+package com.example.pokemonapp.feature.auth.presentation.screen.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -24,10 +25,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pokemonapp.R
-import com.example.pokemonapp.presentation.component.PasswordTextField
+import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.util.MySnackbarHost
+import com.example.pokemonapp.component.MySnackbarHost
 import com.example.pokemonapp.util.ObserveAsEvents
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -36,10 +37,12 @@ import org.koin.androidx.compose.koinViewModel
 //@TraceRecomposition(tag = "login-screen")
 @Composable
 fun LoginScreen(
+    navigateToList: () -> Unit,
     navigateToRegister: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel = koinViewModel<LoginViewModel>()
+    val uiState by viewModel.uiState
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -48,9 +51,11 @@ fun LoginScreen(
             is LoginEvent.OnLogin -> {
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = if (event.isSuccess) context.getString(R.string.msg_login_success, viewModel.username)
+                        message = if (event.isSuccess) context.getString(R.string.msg_login_success, uiState.username)
                         else context.getString(R.string.msg_login_failure)
                     )
+
+                    if (event.isSuccess) navigateToList()
                 }
             }
         }
@@ -75,14 +80,14 @@ fun LoginScreen(
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = viewModel.username,
+                value = uiState.username,
                 onValueChange = viewModel::updateUsername,
                 label = { Text(stringResource(R.string.lbl_username)) },
             )
             PasswordTextField(
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.lbl_password),
-                value = viewModel.password,
+                value = uiState.password,
                 onValueChange = viewModel::updatePassword,
                 contentDescription = stringResource(R.string.content_desc_toggle_password),
             )
@@ -90,7 +95,7 @@ fun LoginScreen(
             Button(
                 modifier = defaultButtonModifier
                     .fillMaxWidth(),
-                enabled = viewModel.username.isNotEmpty() && viewModel.password.isNotEmpty(),
+                enabled = uiState.username.isNotEmpty() && uiState.password.isNotEmpty(),
                 onClick = viewModel::login
             ) {
                 Text(text = stringResource(R.string.btn_login))
@@ -114,6 +119,9 @@ fun LoginScreen(
 @Composable
 private fun LoginScreenPreview() {
     PokemonAppTheme {
-        LoginScreen(navigateToRegister = {})
+        LoginScreen(
+            navigateToList = {},
+            navigateToRegister = {}
+        )
     }
 }

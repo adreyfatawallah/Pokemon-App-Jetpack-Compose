@@ -5,4 +5,5 @@ plugins {
 
     alias(libs.plugins.stability.analyzer) apply false
     alias(libs.plugins.app.cash.sqldelight) apply false
+    alias(libs.plugins.serialization) apply false
 }
