@@ -17,18 +17,10 @@ fun NavGraphBuilder.authNav(
         composable<AuthRoute.Login> {
             LoginScreen(
                 navigateToList = {
-                    navController.navigate(PokemonGraph) {
-                        popUpTo<AuthGraph> {
-                            inclusive = true
-                        }
-                        restoreState = true
-                        launchSingleTop = true
-                    }
+                    navController.navigate(PokemonGraph)
                 },
                 navigateToRegister = {
-                    navController.navigate(AuthRoute.Register) {
-                        launchSingleTop = true
-                    }
+                    navController.navigate(AuthRoute.Register)
                 }
             )
         }

@@ -1,7 +1,7 @@
 package com.example.pokemonapp.feature.auth
 
-import com.example.pokemonapp.feature.auth.data.datasource.local.LocalDataSource
-import com.example.pokemonapp.feature.auth.data.datasource.local.LocalDataSourceImpl
+import com.example.pokemonapp.feature.auth.data.datasource.local.AuthLocalDataSource
+import com.example.pokemonapp.feature.auth.data.datasource.local.AuthLocalDataSourceImpl
 import com.example.pokemonapp.feature.auth.domain.AuthRepositoryImpl
 import com.example.pokemonapp.feature.auth.domain.AuthRespository
 import com.example.pokemonapp.feature.auth.presentation.screen.login.LoginViewModel
@@ -12,7 +12,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val authModule = module {
-    singleOf(::LocalDataSourceImpl).bind<LocalDataSource>()
+    singleOf(::AuthLocalDataSourceImpl).bind<AuthLocalDataSource>()
     singleOf(::AuthRepositoryImpl).bind<AuthRespository>()
 
     viewModelOf(::LoginViewModel)

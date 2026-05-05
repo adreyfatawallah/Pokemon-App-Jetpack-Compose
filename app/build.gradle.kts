@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.stability.analyzer)
     alias(libs.plugins.app.cash.sqldelight)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.kotzilla)
 }
 
 android {
@@ -26,7 +27,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://pokeapi.co/api/v2/\"")
+        }
         release {
+            buildConfigField("String", "BASE_URL", "\"https://pokeapi.co/api/v2/\"")
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -62,14 +68,15 @@ dependencies {
     implementation(libs.app.cash.sqldelight.android)
 
     implementation(platform(libs.io.insert.koin.bom))
-    implementation(libs.io.insert.koin.android)
-    implementation(libs.io.insert.koin.compose)
-    implementation(libs.io.insert.koin.compose.viewmodel)
-    implementation(libs.io.insert.koin.androidx.navigation)
+    implementation(libs.bundles.koin)
 
     implementation(libs.kotlinx.serialization)
 
     implementation(libs.androidx.datastore)
+
+    implementation(libs.bundles.ktor)
+
+    implementation(libs.kotzilla.sdk.compose)
 
     testImplementation(libs.junit)
 
@@ -86,6 +93,11 @@ sqldelight {
     databases {
         create("UserDatabase") {
             packageName.set("com.example")
+            srcDirs.setFrom("src/main/sqldelight/UserDatabase")
+        }
+        create("PokemonDatabase") {
+            packageName.set("com.example")
+            srcDirs.setFrom("src/main/sqldelight/PokemonDatabase")
         }
     }
 }

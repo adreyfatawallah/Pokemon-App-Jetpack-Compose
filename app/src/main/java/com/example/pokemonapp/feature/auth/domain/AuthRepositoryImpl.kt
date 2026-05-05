@@ -2,11 +2,11 @@ package com.example.pokemonapp.feature.auth.domain
 
 import com.example.pokemonapp.config.preference.UserPreference
 import com.example.pokemonapp.feature.auth.data.model.UserModel
-import com.example.pokemonapp.feature.auth.data.datasource.local.LocalDataSource
+import com.example.pokemonapp.feature.auth.data.datasource.local.AuthLocalDataSource
 import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
 
 class AuthRepositoryImpl(
-    private val localDataSource: LocalDataSource,
+    private val localDataSource: AuthLocalDataSource,
     private val preference: UserPreference
 ): AuthRespository {
 

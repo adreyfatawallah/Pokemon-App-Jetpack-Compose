@@ -6,9 +6,9 @@ import com.example.pokemonapp.feature.auth.data.model.UserModel
 import com.example.pokemonapp.feature.auth.data.model.toModel
 import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
 
-class LocalDataSourceImpl(
+class AuthLocalDataSourceImpl(
     userDatabaseDriver: UserDatabaseDriver
-) : LocalDataSource {
+) : AuthLocalDataSource {
 
     private val database = UserDatabase(
         userDatabaseDriver.createDriver()
