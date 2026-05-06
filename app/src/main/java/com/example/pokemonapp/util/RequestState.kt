@@ -15,6 +15,7 @@ sealed class RequestState<out T> {
     data class Success<out T>(val data: T) : RequestState<T>()
     data class Error(val message: String) : RequestState<Nothing>()
 
+    fun isIdle(): Boolean = this is Idle
     fun isLoading(): Boolean = this is Loading
     fun isError(): Boolean = this is Error
     fun isSuccess(): Boolean = this is Success

@@ -3,7 +3,6 @@ package com.example.pokemonapp.feature.auth.presentation.screen.register
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,17 +27,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pokemonapp.R
+import com.example.pokemonapp.component.LoadingCard
+import com.example.pokemonapp.component.MySnackbarHost
+import com.example.pokemonapp.component.resultWithAction
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.component.MySnackbarHost
 import com.example.pokemonapp.util.ObserveAsEvents
-import com.example.pokemonapp.component.resultWithAction
+import com.skydoves.compose.stability.runtime.TraceRecomposition
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -47,28 +48,38 @@ import org.koin.androidx.compose.koinViewModel
 fun RegisterScreen(
     navigateBack: () -> Unit,
 ) {
-    val context = LocalContext.current
     val viewModel = koinViewModel<RegisterViewModel>()
-    val uiState by viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val msgRegisterSuccess = stringResource(R.string.msg_register_success)
+    val lblOK = stringResource(R.string.lbl_OK)
 
     ObserveAsEvents(viewModel.events) { event ->
         scope.launch {
             when(event) {
-                is RegisterEvent.OnRegister -> {
-                    if (event.isSuccess) {
-                        val result = snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.msg_register_success),
-                            actionLabel = context.getString(R.string.lbl_OK),
-                            duration = SnackbarDuration.Short
-                        )
-                        resultWithAction(result, navigateBack)
-                    } else {
-                        snackbarHostState.showSnackbar(
-                            message = event.message ?: context.getString(R.string.msg_register_failure)
-                        )
-                    }
+                is OnRegisterEvent.Success -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = msgRegisterSuccess,
+                        actionLabel = lblOK,
+                        duration = SnackbarDuration.Short
+                    )
+                    resultWithAction(
+                        result,
+                        navigateBack
+                    )
+                }
+                is OnRegisterEvent.Failure -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = lblOK,
+                        duration = SnackbarDuration.Short
+                    )
+                    resultWithAction(
+                        result,
+                        viewModel::resetLoading
+                    )
                 }
             }
         }
@@ -98,70 +109,125 @@ fun RegisterScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = uiState.username,
-                onValueChange = viewModel::updateUsername,
-                label = { Text(stringResource(R.string.lbl_username)) },
-                isError = uiState.username.isNotEmpty() && !uiState.isUsernameValid,
-                supportingText = {
-                    if (uiState.username.isNotEmpty() && !uiState.isUsernameValid) {
-                        Text(stringResource(R.string.msg_validation_username))
-                    }
-                },
-                singleLine = true
+        if (uiState.isLoading == true) {
+            LoadingCard(modifier = Modifier.padding(innerPadding))
+        } else {
+            RegisterForm(
+                modifier = Modifier.padding(innerPadding),
+                username = uiState.username,
+                updateUsername = viewModel::updateUsername,
+                isUsernameValid = uiState.isUsernameValid,
+                password = uiState.password,
+                updatePassword = viewModel::updatePassword,
+                isPasswordValid = uiState.isPasswordValid,
+                retypePassword = uiState.retypePassword,
+                updateRetypePassword = viewModel::updateRetypePassword,
+                isPasswordMatch = uiState.isPasswordMatch,
+                register = viewModel::register,
+                isLoading = uiState.isLoading != null
             )
-            PasswordTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = stringResource(R.string.lbl_password),
-                value = uiState.password,
-                onValueChange = viewModel::updatePassword,
-                contentDescription = stringResource(R.string.content_desc_toggle_password),
-                isError = uiState.password.isNotEmpty() && !uiState.isPasswordValid,
-                supportingText = {
-                    if (uiState.password.isNotEmpty() && !uiState.isPasswordValid) {
-                        Text(stringResource(R.string.msg_validation_password))
-                    }
-                }
-            )
-            PasswordTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = stringResource(R.string.lbl_retype_password),
-                value = uiState.retypePassword,
-                onValueChange = viewModel::updateRetypePassword,
-                contentDescription = stringResource(R.string.content_desc_toggle_retype_password),
-                isError = uiState.retypePassword.isNotEmpty() && !uiState.isPasswordMatch,
-                supportingText = {
-                    if (uiState.retypePassword.isNotEmpty() && !uiState.isPasswordMatch) {
-                        Text(stringResource(R.string.msg_validation_retype_password))
-                    }
-                }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                modifier = defaultButtonModifier
-                    .fillMaxWidth(),
-                enabled = uiState.isUsernameValid && uiState.isPasswordValid && uiState.isPasswordMatch,
-                onClick = viewModel::register,
-            ) {
-                Text(text = stringResource(R.string.btn_register))
-            }
         }
     }
 }
 
-@Preview
+@Composable
+fun RegisterForm(
+    modifier: Modifier = Modifier,
+    username: String,
+    updateUsername: (String) -> Unit,
+    isUsernameValid: Boolean,
+    password: String,
+    updatePassword: (String) -> Unit,
+    isPasswordValid: Boolean,
+    retypePassword: String,
+    updateRetypePassword: (String) -> Unit,
+    isPasswordMatch: Boolean,
+    register: () -> Unit,
+    isLoading: Boolean
+) {
+    Column(
+        modifier = modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = username,
+            onValueChange = updateUsername,
+            label = { Text(stringResource(R.string.lbl_username)) },
+            isError = username.isNotEmpty() && !isUsernameValid,
+            supportingText = {
+                if (username.isNotEmpty() && !isUsernameValid) {
+                    Text(stringResource(R.string.msg_validation_username))
+                }
+            },
+            singleLine = true
+        )
+        PasswordTextField(
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(R.string.lbl_password),
+            value = password,
+            onValueChange = updatePassword,
+            contentDescription = stringResource(R.string.content_desc_toggle_password),
+            isError = password.isNotEmpty() && !isPasswordValid,
+            supportingText = {
+                if (password.isNotEmpty() && !isPasswordValid) {
+                    Text(stringResource(R.string.msg_validation_password))
+                }
+            }
+        )
+        PasswordTextField(
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(R.string.lbl_retype_password),
+            value = retypePassword,
+            onValueChange = updateRetypePassword,
+            contentDescription = stringResource(R.string.content_desc_toggle_retype_password),
+            isError = retypePassword.isNotEmpty() && !isPasswordMatch,
+            supportingText = {
+                if (retypePassword.isNotEmpty() && !isPasswordMatch) {
+                    Text(stringResource(R.string.msg_validation_retype_password))
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            modifier = defaultButtonModifier
+                .fillMaxWidth(),
+            enabled = isUsernameValid && isPasswordValid && isPasswordMatch && !isLoading,
+            onClick = register,
+        ) {
+            Text(text = stringResource(R.string.btn_register))
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterFormPreview() {
+    PokemonAppTheme {
+        RegisterForm(
+            username = "Username",
+            updateUsername = { },
+            isUsernameValid = true,
+            password = "Password",
+            updatePassword = { },
+            isPasswordValid = true,
+            retypePassword = "Password",
+            updateRetypePassword = { },
+            isPasswordMatch = true,
+            register = { },
+            isLoading = false
+        )
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
 private fun RegisterScreenPreview() {
     PokemonAppTheme {
-        RegisterScreen(navigateBack = {})
+        RegisterScreen(
+            navigateBack = { }
+        )
     }
 }

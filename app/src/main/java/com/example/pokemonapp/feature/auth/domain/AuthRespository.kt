@@ -8,6 +8,4 @@ interface AuthRespository {
     suspend fun login(userEntity: UserEntity): UserModel?
 
     suspend fun register(userEntity: UserEntity): Long
-
-    suspend fun updatePreferenceLogin(username: String)
 }

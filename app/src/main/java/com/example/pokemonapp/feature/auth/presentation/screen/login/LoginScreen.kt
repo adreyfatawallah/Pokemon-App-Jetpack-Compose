@@ -1,12 +1,15 @@
 package com.example.pokemonapp.feature.auth.presentation.screen.login
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -20,44 +23,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pokemonapp.R
+import com.example.pokemonapp.component.LoadingCard
+import com.example.pokemonapp.component.MySnackbarHost
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.component.MySnackbarHost
 import com.example.pokemonapp.util.ObserveAsEvents
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
-// example tracking recomposition on log cat
-//@TraceRecomposition(tag = "login-screen")
 @Composable
 fun LoginScreen(
     navigateToList: () -> Unit,
-    navigateToRegister: () -> Unit
+    navigateToRegister: () -> Unit,
 ) {
-    val context = LocalContext.current
     val viewModel = koinViewModel<LoginViewModel>()
-    val uiState by viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     ObserveAsEvents(viewModel.event) { event ->
-        when(event) {
-            is LoginEvent.OnLogin -> {
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = if (event.isSuccess) context.getString(R.string.msg_login_success, uiState.username)
-                        else context.getString(R.string.msg_login_failure)
-                    )
+        scope.launch {
+            snackbarHostState.showSnackbar(
+                message = event.message
+            )
 
-                    if (event.isSuccess) navigateToList()
-                }
-            }
+            viewModel.resetLoading()
+
+            if (event is OnLoginEvent.Success) navigateToList()
         }
     }
 
@@ -66,52 +64,106 @@ fun LoginScreen(
             MySnackbarHost(snackbarHostState)
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displaySmall,
+        if (uiState.isLoading == true) {
+            LoadingCard(
+                modifier = Modifier
+                    .padding(innerPadding)
             )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = uiState.username,
-                onValueChange = viewModel::updateUsername,
-                label = { Text(stringResource(R.string.lbl_username)) },
-            )
-            PasswordTextField(
-                modifier = Modifier.fillMaxWidth(),
-                label = stringResource(R.string.lbl_password),
-                value = uiState.password,
-                onValueChange = viewModel::updatePassword,
-                contentDescription = stringResource(R.string.content_desc_toggle_password),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                modifier = defaultButtonModifier
-                    .fillMaxWidth(),
-                enabled = uiState.username.isNotEmpty() && uiState.password.isNotEmpty(),
-                onClick = viewModel::login
+        } else {
+            Box(
+                modifier = Modifier.padding(innerPadding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = stringResource(R.string.btn_login))
-            }
-            OutlinedButton(
-                modifier = defaultButtonModifier
-                    .fillMaxWidth(),
-                onClick = {
-                    viewModel.updateUsername("")
-                    viewModel.updatePassword("")
-                    navigateToRegister()
-                }
-            ) {
-                Text(text = stringResource(R.string.btn_register))
+                LoginForm(
+                    username = uiState.username,
+                    updateUsername = viewModel::updateUsername,
+                    password = uiState.password,
+                    updatePassword = viewModel::updatePassword,
+                    login = viewModel::login,
+                    isLoading = uiState.isLoading != null,
+                    navigateToRegister = navigateToRegister
+                )
             }
         }
+    }
+}
+
+
+// example tracking recomposition on log cat
+//@TraceRecomposition(tag = "login-form")
+@Composable
+fun LoginForm(
+    modifier: Modifier = Modifier,
+    username: String,
+    updateUsername: (String) -> Unit,
+    password: String,
+    updatePassword: (String) -> Unit,
+    login: () -> Unit,
+    isLoading: Boolean,
+    navigateToRegister: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .padding(24.dp)
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.displaySmall,
+        )
+        OutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = username,
+            onValueChange = updateUsername,
+            label = { Text(stringResource(R.string.lbl_username)) },
+        )
+        PasswordTextField(
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(R.string.lbl_password),
+            value = password,
+            onValueChange = updatePassword,
+            contentDescription = stringResource(R.string.content_desc_toggle_password),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            modifier = defaultButtonModifier
+                .fillMaxWidth(),
+            enabled = username.isNotEmpty() && password.isNotEmpty() && !isLoading,
+            onClick = login
+        ) {
+            Text(text = stringResource(R.string.btn_login))
+        }
+        OutlinedButton(
+            modifier = defaultButtonModifier
+                .fillMaxWidth(),
+            onClick = {
+                updateUsername("")
+                updatePassword("")
+                navigateToRegister()
+            }
+        ) {
+            Text(text = stringResource(R.string.btn_register))
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LoginFormPreview() {
+    PokemonAppTheme {
+        LoginForm(
+            username = "Username",
+            updateUsername = { },
+            password = "Password",
+            updatePassword = { },
+            login = { },
+            isLoading = false,
+            navigateToRegister = { }
+        )
     }
 }
 

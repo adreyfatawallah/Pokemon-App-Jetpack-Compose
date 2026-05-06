@@ -41,7 +41,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@TraceRecomposition
 @Composable
 fun SetupNavHost(hasLogin: Boolean) {
     val navController = rememberNavController()

@@ -1,6 +1,7 @@
 package com.example.pokemonapp.feature.pokemon.presentation.screen.list
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,9 +16,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pokemonapp.R
+import com.example.pokemonapp.component.LoadingCard
+import com.example.pokemonapp.feature.pokemon.presentation.component.ItemPokemon
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
+import com.example.pokemonapp.util.DisplayResult
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,14 +44,21 @@ fun ListScreen() {
             )
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            Text(text = stringResource(R.string.app_name))
-            LazyColumn {
-                items(uiState) { pokemonEntity ->
-                    Text(text = pokemonEntity.name)
+        uiState.DisplayResult(
+            modifier = Modifier.padding(innerPadding),
+            onLoading = { LoadingCard() },
+            onSuccess = { listPokemon ->
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(listPokemon) { pokemon ->
+                        ItemPokemon(pokemon = pokemon)
+                    }
                 }
-            }
-        }
+            },
+            onError = {}
+        )
     }
 }
 

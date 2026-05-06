@@ -60,8 +60,8 @@ fun PasswordTextField(
 private fun PasswordTextFieldPreview() {
     PokemonAppTheme {
         PasswordTextField(
-            label = "Label",
-            value = "",
+            label = "Password",
+            value = "Password",
             onValueChange = {},
             contentDescription = "",
             isError = false,
