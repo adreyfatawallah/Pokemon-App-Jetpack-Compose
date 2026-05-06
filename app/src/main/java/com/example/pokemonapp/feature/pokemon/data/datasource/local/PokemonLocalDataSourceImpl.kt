@@ -3,6 +3,7 @@ package com.example.pokemonapp.feature.pokemon.data.datasource.local
 import com.example.PokemonDatabase
 import com.example.pokemonapp.config.database.PokemonDatabaseDriver
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
+import com.example.pokemonapp.feature.pokemon.domain.entity.toPokemonEntity
 
 class PokemonLocalDataSourceImpl(
     pokemonDatabaseDriver: PokemonDatabaseDriver
@@ -27,11 +28,6 @@ class PokemonLocalDataSourceImpl(
 
     override suspend fun getAllPokemon(): List<PokemonEntity> {
         return query.getAllPokemon().executeAsList()
-            .map { pokemonTable ->
-                PokemonEntity(
-                    name = pokemonTable.name,
-                    url = pokemonTable.url
-                )
-            }
+            .map { it.toPokemonEntity() }
     }
 }

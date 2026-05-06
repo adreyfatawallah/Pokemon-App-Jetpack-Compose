@@ -7,7 +7,6 @@ import com.example.pokemonapp.feature.pokemon.data.datasource.local.PokemonLocal
 import com.example.pokemonapp.feature.pokemon.data.datasource.remote.PokemonRemoteDataSource
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
 import com.example.pokemonapp.feature.pokemon.domain.entity.toPokemonEntity
-import com.example.pokemonapp.feature.pokemon.domain.entity.toPokemonListEntity
 
 class PokemonRepositoryImpl(
     private val remoteDataSource: PokemonRemoteDataSource,

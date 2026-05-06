@@ -5,6 +5,7 @@
     <string name="lbl_password">Password</string>
     <string name="lbl_retype_password">Retype Password</string>
     <string name="lbl_OK">OK</string>
+    <string name="lbl_empty">Empty</string>
 
     <!--  BUTTON  -->
     <string name="btn_login">Login</string>

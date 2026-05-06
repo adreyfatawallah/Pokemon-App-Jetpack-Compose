@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pokemonapp.R
+import com.example.pokemonapp.component.EmptyCard
 import com.example.pokemonapp.component.LoadingCard
 import com.example.pokemonapp.feature.pokemon.presentation.component.ItemPokemon
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
@@ -57,7 +58,9 @@ fun ListScreen() {
                     }
                 }
             },
-            onError = {}
+            onError = { message ->
+                EmptyCard(text = message)
+            }
         )
     }
 }

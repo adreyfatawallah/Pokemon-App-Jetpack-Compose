@@ -1,5 +1,6 @@
 package com.example.pokemonapp.feature.pokemon.domain.entity
 
+import com.example.PokemonTable
 import com.example.pokemonapp.feature.pokemon.data.model.PokemonListModel
 import com.example.pokemonapp.feature.pokemon.data.model.PokemonModel
 
@@ -21,6 +22,13 @@ fun PokemonListModel.toPokemonListEntity(): PokemonListEntity {
 }
 
 fun PokemonModel.toPokemonEntity(): PokemonEntity {
+    return PokemonEntity(
+        name = name,
+        url = url
+    )
+}
+
+fun PokemonTable.toPokemonEntity(): PokemonEntity {
     return PokemonEntity(
         name = name,
         url = url
