@@ -2,7 +2,7 @@ package com.example.pokemonapp.main.presentation.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pokemonapp.main.domain.MainRepository
+import com.example.pokemonapp.main.domain.repository.MainRepository
 import com.example.pokemonapp.util.RequestState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

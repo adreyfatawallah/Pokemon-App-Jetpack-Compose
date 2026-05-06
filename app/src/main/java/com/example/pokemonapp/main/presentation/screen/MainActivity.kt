@@ -1,6 +1,7 @@
 package com.example.pokemonapp.main.presentation.screen
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,7 +19,6 @@ import com.example.pokemonapp.feature.pokemon.presentation.navigation.PokemonGra
 import com.example.pokemonapp.feature.pokemon.presentation.navigation.pokemonNav
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.util.DisplayResult
-import com.skydoves.compose.stability.runtime.TraceRecomposition
 import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
@@ -34,7 +34,11 @@ class MainActivity : ComponentActivity() {
                 hasLogin.DisplayResult(
                     onLoading = { LoadingCard() },
                     onSuccess = { hasLogin -> SetupNavHost(hasLogin) },
-                    onError = { SetupNavHost(false) }
+                    onError = { message ->
+                        Log.e("adrey", "error: $message")
+
+                        SetupNavHost(false)
+                    }
                 )
             }
         }

@@ -4,27 +4,25 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pokemonapp.R
-import com.example.pokemonapp.feature.auth.domain.AuthRespository
+import com.example.pokemonapp.feature.auth.domain.repository.AuthRespository
 import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-sealed class OnLoginEvent(val message: String) {
-    class Success(message: String) : OnLoginEvent(message)
-    class Failure(message: String) : OnLoginEvent(message)
+sealed interface OnLoginState {
+    data object Idle : OnLoginState
+    data object Loading : OnLoginState
+    class Success(val message: String) : OnLoginState
+    class Failure(val message: String) : OnLoginState
 }
 
 data class LoginUiState(
     val username: String = "",
     val password: String = "",
-
-    val isLoading: Boolean? = null,
 )
 
 class LoginViewModel(
@@ -32,8 +30,8 @@ class LoginViewModel(
     private val authRespository: AuthRespository,
 ) : ViewModel() {
 
-    private val _eventChannel = Channel<OnLoginEvent>()
-    val event = _eventChannel.receiveAsFlow()
+    private val _onLoginState: MutableStateFlow<OnLoginState> = MutableStateFlow(OnLoginState.Idle)
+    val onLoginState = _onLoginState.asStateFlow()
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
@@ -51,13 +49,11 @@ class LoginViewModel(
     }
 
     fun login() {
-        if (_uiState.value.isLoading == true)
+        if (_onLoginState.value is OnLoginState.Loading)
             return
 
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(isLoading = true)
-            }
+            _onLoginState.value = OnLoginState.Loading
 
             val result = withContext(Dispatchers.IO) {
                 authRespository.login(
@@ -68,20 +64,16 @@ class LoginViewModel(
                 )
             }
 
-            _eventChannel.send(
-                if (result != null) OnLoginEvent.Success(app.getString(R.string.msg_login_success))
-                else OnLoginEvent.Failure(app.getString(R.string.msg_login_failure))
-            )
+            val isSuccess = result != null
+            val message = if (isSuccess) app.getString(R.string.msg_login_success, _uiState.value.username)
+            else app.getString(R.string.msg_login_failure)
 
-            _uiState.update {
-                it.copy(isLoading = false)
-            }
+            _onLoginState.value = if (isSuccess) OnLoginState.Success(message = message)
+            else OnLoginState.Failure(message = message)
         }
     }
 
-    fun resetLoading() {
-        _uiState.update {
-            it.copy(isLoading = null)
-        }
+    fun resetOnLoginState() {
+        _onLoginState.value = OnLoginState.Idle
     }
 }

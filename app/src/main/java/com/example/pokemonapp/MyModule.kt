@@ -4,8 +4,8 @@ import com.example.pokemonapp.config.database.PokemonDatabaseDriver
 import com.example.pokemonapp.config.database.UserDatabaseDriver
 import com.example.pokemonapp.config.network.MyHttpClient
 import com.example.pokemonapp.config.preference.MyPreference
-import com.example.pokemonapp.main.domain.MainRepository
-import com.example.pokemonapp.main.domain.MainRepositoryImpl
+import com.example.pokemonapp.main.domain.repository.MainRepository
+import com.example.pokemonapp.main.domain.repository.MainRepositoryImpl
 import com.example.pokemonapp.main.presentation.screen.MainViewModel
 import io.ktor.client.engine.cio.CIO
 import org.koin.core.module.dsl.singleOf

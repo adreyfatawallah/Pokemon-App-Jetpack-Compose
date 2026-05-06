@@ -1,4 +1,4 @@
-package com.example.pokemonapp.feature.pokemon.domain
+package com.example.pokemonapp.feature.pokemon.domain.repository
 
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
 

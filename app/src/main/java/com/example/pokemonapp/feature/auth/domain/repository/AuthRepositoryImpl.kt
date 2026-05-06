@@ -1,4 +1,4 @@
-package com.example.pokemonapp.feature.auth.domain
+package com.example.pokemonapp.feature.auth.domain.repository
 
 import com.example.pokemonapp.config.preference.MyPreference
 import com.example.pokemonapp.feature.auth.data.model.UserModel

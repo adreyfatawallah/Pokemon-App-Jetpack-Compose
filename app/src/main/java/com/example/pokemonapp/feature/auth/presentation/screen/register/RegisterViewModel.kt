@@ -4,20 +4,20 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pokemonapp.R
-import com.example.pokemonapp.feature.auth.domain.AuthRespository
+import com.example.pokemonapp.feature.auth.domain.repository.AuthRespository
 import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-sealed class OnRegisterEvent {
-    object Success: OnRegisterEvent()
-    data class Failure(val message: String): OnRegisterEvent()
+sealed interface OnRegisterState {
+    data object Idle : OnRegisterState
+    data object Loading : OnRegisterState
+    data class Success(val message: String) : OnRegisterState
+    data class Failure(val message: String) : OnRegisterState
 }
 
 data class RegisterUiState(
@@ -28,8 +28,6 @@ data class RegisterUiState(
     val isUsernameValid: Boolean = false,
     val isPasswordValid: Boolean = false,
     val isPasswordMatch: Boolean = false,
-
-    val isLoading: Boolean? = null
 )
 
 class RegisterViewModel(
@@ -37,8 +35,9 @@ class RegisterViewModel(
     private val authRespository: AuthRespository,
 ) : ViewModel() {
 
-    private val _eventChannel = Channel<OnRegisterEvent>()
-    val events = _eventChannel.receiveAsFlow()
+    private val _onRegisterState: MutableStateFlow<OnRegisterState> =
+        MutableStateFlow(OnRegisterState.Idle)
+    val onRegisterState = _onRegisterState.asStateFlow()
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState = _uiState.asStateFlow()
@@ -72,14 +71,13 @@ class RegisterViewModel(
     }
 
     fun register() {
-        if (_uiState.value.isLoading == true)
+        if (_onRegisterState.value is OnRegisterState.Loading)
             return
 
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(isLoading = true)
-            }
+            _onRegisterState.value = OnRegisterState.Loading
 
+            val msgSuccess = app.getString(R.string.msg_register_success)
             val msgFailure = app.getString(R.string.msg_register_failure)
 
             try {
@@ -92,25 +90,17 @@ class RegisterViewModel(
                     )
                 }
 
-                _eventChannel.send(
-                    if (result > 0) OnRegisterEvent.Success
-                    else OnRegisterEvent.Failure(msgFailure)
-                )
+                val isSuccess = result > 0
+                _onRegisterState.value =
+                    if (isSuccess) OnRegisterState.Success(message = msgSuccess)
+                    else OnRegisterState.Failure(message = msgFailure)
             } catch (e: Exception) {
-                _eventChannel.send(
-                    OnRegisterEvent.Failure(message = e.message ?: msgFailure)
-                )
-            }
-
-            _uiState.update {
-                it.copy(isLoading = false)
+                _onRegisterState.value = OnRegisterState.Failure(message = e.message ?: msgFailure)
             }
         }
     }
 
-    fun resetLoading() {
-        _uiState.update {
-            it.copy(isLoading = null)
-        }
+    fun resetOnRegisterState() {
+        _onRegisterState.value = OnRegisterState.Idle
     }
 }

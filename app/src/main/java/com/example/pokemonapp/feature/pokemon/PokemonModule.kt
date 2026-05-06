@@ -4,8 +4,8 @@ import com.example.pokemonapp.feature.pokemon.data.datasource.local.PokemonLocal
 import com.example.pokemonapp.feature.pokemon.data.datasource.local.PokemonLocalDataSourceImpl
 import com.example.pokemonapp.feature.pokemon.data.datasource.remote.PokemonRemoteDataSource
 import com.example.pokemonapp.feature.pokemon.data.datasource.remote.PokemonRemoteDataSourceImpl
-import com.example.pokemonapp.feature.pokemon.domain.PokemonRepository
-import com.example.pokemonapp.feature.pokemon.domain.PokemonRepositoryImpl
+import com.example.pokemonapp.feature.pokemon.domain.repository.PokemonRepository
+import com.example.pokemonapp.feature.pokemon.domain.repository.PokemonRepositoryImpl
 import com.example.pokemonapp.feature.pokemon.presentation.screen.list.ListViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf

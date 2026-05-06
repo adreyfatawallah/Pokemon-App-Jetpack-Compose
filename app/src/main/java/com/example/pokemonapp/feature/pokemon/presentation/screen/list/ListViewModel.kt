@@ -2,7 +2,7 @@ package com.example.pokemonapp.feature.pokemon.presentation.screen.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pokemonapp.feature.pokemon.domain.PokemonRepository
+import com.example.pokemonapp.feature.pokemon.domain.repository.PokemonRepository
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
 import com.example.pokemonapp.util.RequestState
 import kotlinx.coroutines.flow.MutableStateFlow

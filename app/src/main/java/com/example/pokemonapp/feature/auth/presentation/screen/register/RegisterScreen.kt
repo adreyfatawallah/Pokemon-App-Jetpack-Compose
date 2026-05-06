@@ -23,9 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,9 +38,6 @@ import com.example.pokemonapp.component.resultWithAction
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.util.ObserveAsEvents
-import com.skydoves.compose.stability.runtime.TraceRecomposition
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,38 +47,36 @@ fun RegisterScreen(
 ) {
     val viewModel = koinViewModel<RegisterViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onRegisterState by viewModel.onRegisterState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    val msgRegisterSuccess = stringResource(R.string.msg_register_success)
     val lblOK = stringResource(R.string.lbl_OK)
 
-    ObserveAsEvents(viewModel.events) { event ->
-        scope.launch {
-            when(event) {
-                is OnRegisterEvent.Success -> {
-                    val result = snackbarHostState.showSnackbar(
-                        message = msgRegisterSuccess,
-                        actionLabel = lblOK,
-                        duration = SnackbarDuration.Short
-                    )
-                    resultWithAction(
-                        result,
-                        navigateBack
-                    )
-                }
-                is OnRegisterEvent.Failure -> {
-                    val result = snackbarHostState.showSnackbar(
-                        message = event.message,
-                        actionLabel = lblOK,
-                        duration = SnackbarDuration.Short
-                    )
-                    resultWithAction(
-                        result,
-                        viewModel::resetLoading
-                    )
-                }
+    LaunchedEffect(onRegisterState) {
+        when(val state = onRegisterState) {
+            is OnRegisterState.Failure -> {
+                val result = snackbarHostState.showSnackbar(
+                    message = state.message,
+                    actionLabel = lblOK,
+                    duration = SnackbarDuration.Short
+                )
+                resultWithAction(
+                    result,
+                    viewModel::resetOnRegisterState
+                )
             }
+            is OnRegisterState.Success -> {
+                val result = snackbarHostState.showSnackbar(
+                    message = state.message,
+                    actionLabel = lblOK,
+                    duration = SnackbarDuration.Short
+                )
+                resultWithAction(
+                    result,
+                    navigateBack
+                )
+            }
+            else -> { }
         }
     }
 
@@ -109,23 +104,26 @@ fun RegisterScreen(
             )
         }
     ) { innerPadding ->
-        if (uiState.isLoading == true) {
-            LoadingCard(modifier = Modifier.padding(innerPadding))
-        } else {
-            RegisterForm(
-                modifier = Modifier.padding(innerPadding),
-                username = uiState.username,
-                updateUsername = viewModel::updateUsername,
-                isUsernameValid = uiState.isUsernameValid,
-                password = uiState.password,
-                updatePassword = viewModel::updatePassword,
-                isPasswordValid = uiState.isPasswordValid,
-                retypePassword = uiState.retypePassword,
-                updateRetypePassword = viewModel::updateRetypePassword,
-                isPasswordMatch = uiState.isPasswordMatch,
-                register = viewModel::register,
-                isLoading = uiState.isLoading != null
-            )
+        when(onRegisterState) {
+            is OnRegisterState.Loading -> {
+                LoadingCard(modifier = Modifier.padding(innerPadding))
+            }
+            else -> {
+                RegisterForm(
+                    modifier = Modifier.padding(innerPadding),
+                    username = uiState.username,
+                    updateUsername = viewModel::updateUsername,
+                    isUsernameValid = uiState.isUsernameValid,
+                    password = uiState.password,
+                    updatePassword = viewModel::updatePassword,
+                    isPasswordValid = uiState.isPasswordValid,
+                    retypePassword = uiState.retypePassword,
+                    updateRetypePassword = viewModel::updateRetypePassword,
+                    isPasswordMatch = uiState.isPasswordMatch,
+                    register = viewModel::register,
+                    isIdle = onRegisterState is OnRegisterState.Idle
+                )
+            }
         }
     }
 }
@@ -143,7 +141,7 @@ fun RegisterForm(
     updateRetypePassword: (String) -> Unit,
     isPasswordMatch: Boolean,
     register: () -> Unit,
-    isLoading: Boolean
+    isIdle: Boolean,
 ) {
     Column(
         modifier = modifier
@@ -194,7 +192,7 @@ fun RegisterForm(
         Button(
             modifier = defaultButtonModifier
                 .fillMaxWidth(),
-            enabled = isUsernameValid && isPasswordValid && isPasswordMatch && !isLoading,
+            enabled = isUsernameValid && isPasswordValid && isPasswordMatch && isIdle,
             onClick = register,
         ) {
             Text(text = stringResource(R.string.btn_register))
@@ -217,7 +215,7 @@ private fun RegisterFormPreview() {
             updateRetypePassword = { },
             isPasswordMatch = true,
             register = { },
-            isLoading = false
+            isIdle = true
         )
     }
 }

@@ -1,0 +1,15 @@
+CREATE TABLE PokemonTable (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    url TEXT NOT NULL
+);
+
+insertOrReplacePokemon:
+INSERT OR REPLACE INTO PokemonTable (
+    name,
+    url
+)
+VALUES (?, ?);
+
+getAllPokemon:
+SELECT * FROM PokemonTable;

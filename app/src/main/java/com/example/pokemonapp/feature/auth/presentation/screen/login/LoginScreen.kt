@@ -15,12 +15,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,11 +31,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pokemonapp.R
 import com.example.pokemonapp.component.LoadingCard
 import com.example.pokemonapp.component.MySnackbarHost
+import com.example.pokemonapp.component.resultWithAction
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
-import com.example.pokemonapp.util.ObserveAsEvents
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -44,18 +44,30 @@ fun LoginScreen(
 ) {
     val viewModel = koinViewModel<LoginViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onLoginState by viewModel.onLoginState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    ObserveAsEvents(viewModel.event) { event ->
-        scope.launch {
-            snackbarHostState.showSnackbar(
-                message = event.message
-            )
+    val lblOk = stringResource(R.string.lbl_OK)
 
-            viewModel.resetLoading()
-
-            if (event is OnLoginEvent.Success) navigateToList()
+    LaunchedEffect(onLoginState) {
+        when(val state = onLoginState) {
+            is OnLoginState.Success -> {
+                val result = snackbarHostState.showSnackbar(
+                    message = state.message,
+                    actionLabel = lblOk,
+                    duration = SnackbarDuration.Short
+                )
+                resultWithAction(result, navigateToList)
+            }
+            is OnLoginState.Failure -> {
+                val result = snackbarHostState.showSnackbar(
+                    message = state.message,
+                    actionLabel = lblOk,
+                    duration = SnackbarDuration.Short
+                )
+                resultWithAction(result, viewModel::resetOnLoginState)
+            }
+            else -> { }
         }
     }
 
@@ -64,26 +76,26 @@ fun LoginScreen(
             MySnackbarHost(snackbarHostState)
         }
     ) { innerPadding ->
-        if (uiState.isLoading == true) {
-            LoadingCard(
-                modifier = Modifier
-                    .padding(innerPadding)
-            )
-        } else {
-            Box(
-                modifier = Modifier.padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                LoginForm(
-                    username = uiState.username,
-                    updateUsername = viewModel::updateUsername,
-                    password = uiState.password,
-                    updatePassword = viewModel::updatePassword,
-                    login = viewModel::login,
-                    isLoading = uiState.isLoading != null,
-                    navigateToRegister = navigateToRegister
-                )
+        when(onLoginState) {
+            is OnLoginState.Loading -> {
+                LoadingCard(modifier = Modifier.padding(innerPadding))
+            }
+            else -> {
+                Box(
+                    modifier = Modifier.padding(innerPadding)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoginForm(
+                        username = uiState.username,
+                        updateUsername = viewModel::updateUsername,
+                        password = uiState.password,
+                        updatePassword = viewModel::updatePassword,
+                        login = viewModel::login,
+                        isIdle = onLoginState is OnLoginState.Idle,
+                        navigateToRegister = navigateToRegister
+                    )
+                }
             }
         }
     }
@@ -100,7 +112,7 @@ fun LoginForm(
     password: String,
     updatePassword: (String) -> Unit,
     login: () -> Unit,
-    isLoading: Boolean,
+    isIdle: Boolean,
     navigateToRegister: () -> Unit
 ) {
     Column(
@@ -132,7 +144,7 @@ fun LoginForm(
         Button(
             modifier = defaultButtonModifier
                 .fillMaxWidth(),
-            enabled = username.isNotEmpty() && password.isNotEmpty() && !isLoading,
+            enabled = username.isNotEmpty() && password.isNotEmpty() && isIdle,
             onClick = login
         ) {
             Text(text = stringResource(R.string.btn_login))
@@ -161,7 +173,7 @@ private fun LoginFormPreview() {
             password = "Password",
             updatePassword = { },
             login = { },
-            isLoading = false,
+            isIdle = true,
             navigateToRegister = { }
         )
     }

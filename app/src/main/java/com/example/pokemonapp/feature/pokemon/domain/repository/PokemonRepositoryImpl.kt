@@ -1,4 +1,4 @@
-package com.example.pokemonapp.feature.pokemon.domain
+package com.example.pokemonapp.feature.pokemon.domain.repository
 
 import android.util.Log
 import com.example.pokemonapp.config.network.result.onError
@@ -6,6 +6,8 @@ import com.example.pokemonapp.config.network.result.onSuccess
 import com.example.pokemonapp.feature.pokemon.data.datasource.local.PokemonLocalDataSource
 import com.example.pokemonapp.feature.pokemon.data.datasource.remote.PokemonRemoteDataSource
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
+import com.example.pokemonapp.feature.pokemon.domain.entity.toPokemonEntity
+import com.example.pokemonapp.feature.pokemon.domain.entity.toPokemonListEntity
 
 class PokemonRepositoryImpl(
     private val remoteDataSource: PokemonRemoteDataSource,
@@ -19,12 +21,7 @@ class PokemonRepositoryImpl(
             .onSuccess { result ->
                 Log.e("adrey", "success: $result")
 
-                listPokemon = result.results.map { pokemonModel ->
-                    PokemonEntity(
-                        name = pokemonModel.name,
-                        url = pokemonModel.url
-                    )
-                }
+                listPokemon = result.results.map { it.toPokemonEntity() }
 
                 localDataSource.insertAllPokemon(listPokemon)
             }

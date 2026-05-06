@@ -1,0 +1,27 @@
+CREATE TABLE UserTable (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
+);
+
+insertUser:
+INSERT INTO UserTable (
+    username,
+    password
+)
+VALUES (?, ?);
+
+selectUser:
+SELECT * FROM UserTable
+WHERE username = ? AND password = ?;
+
+updateUser:
+UPDATE UserTable
+SET
+    username = ?,
+    password = ?
+WHERE id = ?;
+
+deleteUser:
+DELETE FROM UserTable
+WHERE username = ?;
