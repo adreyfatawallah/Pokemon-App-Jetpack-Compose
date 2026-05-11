@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,7 @@ import com.example.pokemonapp.component.resultWithAction
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
+import com.example.pokemonapp.util.RequestState
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -46,20 +48,22 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val onLoginState by viewModel.onLoginState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val lblOk = stringResource(R.string.lbl_OK)
 
     LaunchedEffect(onLoginState) {
-        when(val state = onLoginState) {
-            is OnLoginState.Success -> {
+        when (val state = onLoginState) {
+            is RequestState.Success -> {
                 val result = snackbarHostState.showSnackbar(
-                    message = state.message,
+                    message = state.data,
                     actionLabel = lblOk,
                     duration = SnackbarDuration.Short
                 )
                 resultWithAction(result, navigateToList)
             }
-            is OnLoginState.Failure -> {
+
+            is RequestState.Error -> {
                 val result = snackbarHostState.showSnackbar(
                     message = state.message,
                     actionLabel = lblOk,
@@ -67,7 +71,8 @@ fun LoginScreen(
                 )
                 resultWithAction(result, viewModel::resetOnLoginState)
             }
-            else -> { }
+
+            else -> {}
         }
     }
 
@@ -76,23 +81,23 @@ fun LoginScreen(
             MySnackbarHost(snackbarHostState)
         }
     ) { innerPadding ->
-        when(onLoginState) {
-            is OnLoginState.Loading -> {
-                LoadingCard(modifier = Modifier.padding(innerPadding))
-            }
-            else -> {
-                Box(
-                    modifier = Modifier.padding(innerPadding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+        Box(
+            modifier = Modifier.padding(innerPadding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            when(onLoginState) {
+                is RequestState.Loading -> {
+                    LoadingCard()
+                }
+                else -> {
                     LoginForm(
                         username = uiState.username,
                         updateUsername = viewModel::updateUsername,
                         password = uiState.password,
                         updatePassword = viewModel::updatePassword,
                         login = viewModel::login,
-                        isIdle = onLoginState is OnLoginState.Idle,
+                        isIdle = onLoginState is RequestState.Idle,
                         navigateToRegister = navigateToRegister
                     )
                 }
@@ -101,9 +106,6 @@ fun LoginScreen(
     }
 }
 
-
-// example tracking recomposition on log cat
-//@TraceRecomposition(tag = "login-form")
 @Composable
 fun LoginForm(
     modifier: Modifier = Modifier,

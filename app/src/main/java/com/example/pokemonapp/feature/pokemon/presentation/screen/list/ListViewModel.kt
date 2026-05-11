@@ -23,9 +23,9 @@ class ListViewModel(
         getPokemon()
     }
 
-    private fun getPokemon() {
+    private fun getPokemon(url: String? = null) {
         viewModelScope.launch {
-            val result = repository.getPokemon()
+            val result = repository.getPokemon(url)
             
             _uiState.update {
                 if (result.isNotEmpty()) RequestState.Success(result)

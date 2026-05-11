@@ -9,21 +9,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-sealed class RequestState<out T> {
-    data object Idle : RequestState<Nothing>()
-    data object Loading : RequestState<Nothing>()
-    data class Success<out T>(val data: T) : RequestState<T>()
-    data class Error(val message: String) : RequestState<Nothing>()
+sealed interface RequestState<out T> {
+    data object Idle : RequestState<Nothing>
+    data object Loading : RequestState<Nothing>
+    data class Success<out T>(val data: T) : RequestState<T>
+    data class Error(val message: String) : RequestState<Nothing>
 
     fun isIdle(): Boolean = this is Idle
     fun isLoading(): Boolean = this is Loading
     fun isError(): Boolean = this is Error
     fun isSuccess(): Boolean = this is Success
 
-    fun getSuccessData() = (this as Success).data
-    fun getSuccessDataOrNull() = if (this.isSuccess()) this.getSuccessData() else null
-    fun getErrorMessage() = (this as Error).message
-    fun getErrorMessageOrNull() = if (this.isError()) this.getErrorMessage() else null
+    fun getSuccessData(): T = (this as Success).data
+    fun getSuccessDataOrNull(): T? = when (this) {
+        is Success -> this.data
+        else -> null
+    }
+
+    fun getErrorMessage(): String = (this as Error).message
+    fun getErrorMessageOrNull(): String? = when (this) {
+        is Error -> this.message
+        else -> null
+    }
 }
 
 @Composable
@@ -32,7 +39,7 @@ fun <T> RequestState<T>.DisplayResult(
     onIdle: (@Composable () -> Unit)? = null,
     onLoading: (@Composable () -> Unit)? = null,
     onError: (@Composable (String) -> Unit)? = null,
-    onSuccess: @Composable (T) -> Unit,
+    onSuccess: (@Composable (T) -> Unit),
     backgroundColor: Color? = null,
 ) {
     AnimatedContent(
@@ -53,12 +60,12 @@ fun <T> RequestState<T>.DisplayResult(
                     onLoading?.invoke()
                 }
 
-                is RequestState.Error -> {
-                    onError?.invoke(state.getErrorMessage())
+                is RequestState.Success -> {
+                    onSuccess.invoke(state.data)
                 }
 
-                is RequestState.Success -> {
-                    onSuccess(state.getSuccessData())
+                is RequestState.Error -> {
+                    onError?.invoke(state.message)
                 }
             }
         }

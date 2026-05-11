@@ -6,19 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.pokemonapp.R
 import com.example.pokemonapp.feature.auth.domain.repository.AuthRespository
 import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
+import com.example.pokemonapp.util.RequestState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-sealed interface OnLoginState {
-    data object Idle : OnLoginState
-    data object Loading : OnLoginState
-    class Success(val message: String) : OnLoginState
-    class Failure(val message: String) : OnLoginState
-}
 
 data class LoginUiState(
     val username: String = "",
@@ -30,7 +24,8 @@ class LoginViewModel(
     private val authRespository: AuthRespository,
 ) : ViewModel() {
 
-    private val _onLoginState: MutableStateFlow<OnLoginState> = MutableStateFlow(OnLoginState.Idle)
+    private val _onLoginState: MutableStateFlow<RequestState<String>> =
+        MutableStateFlow(RequestState.Idle)
     val onLoginState = _onLoginState.asStateFlow()
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -49,11 +44,11 @@ class LoginViewModel(
     }
 
     fun login() {
-        if (_onLoginState.value is OnLoginState.Loading)
+        if (_onLoginState.value.isLoading())
             return
 
         viewModelScope.launch {
-            _onLoginState.value = OnLoginState.Loading
+            _onLoginState.value = RequestState.Loading
 
             val result = withContext(Dispatchers.IO) {
                 authRespository.login(
@@ -68,12 +63,12 @@ class LoginViewModel(
             val message = if (isSuccess) app.getString(R.string.msg_login_success, _uiState.value.username)
             else app.getString(R.string.msg_login_failure)
 
-            _onLoginState.value = if (isSuccess) OnLoginState.Success(message = message)
-            else OnLoginState.Failure(message = message)
+            _onLoginState.value = if (isSuccess) RequestState.Success(data = message)
+            else RequestState.Error(message = message)
         }
     }
 
     fun resetOnLoginState() {
-        _onLoginState.value = OnLoginState.Idle
+        _onLoginState.value = RequestState.Idle
     }
 }

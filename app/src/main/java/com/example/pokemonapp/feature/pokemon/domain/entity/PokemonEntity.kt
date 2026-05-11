@@ -14,13 +14,6 @@ data class PokemonEntity(
     val url: String
 )
 
-fun PokemonListModel.toPokemonListEntity(): PokemonListEntity {
-    return PokemonListEntity(
-        next = next,
-        results = results.map { result -> result.toPokemonEntity() }
-    )
-}
-
 fun PokemonModel.toPokemonEntity(): PokemonEntity {
     return PokemonEntity(
         name = name,

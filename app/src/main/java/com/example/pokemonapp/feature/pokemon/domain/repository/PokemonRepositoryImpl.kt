@@ -1,6 +1,5 @@
 package com.example.pokemonapp.feature.pokemon.domain.repository
 
-import android.util.Log
 import com.example.pokemonapp.config.network.result.onError
 import com.example.pokemonapp.config.network.result.onSuccess
 import com.example.pokemonapp.feature.pokemon.data.datasource.local.PokemonLocalDataSource
@@ -18,15 +17,11 @@ class PokemonRepositoryImpl(
 
         remoteDataSource.getPokemon(url = url)
             .onSuccess { result ->
-                Log.e("adrey", "success: $result")
-
                 listPokemon = result.results.map { it.toPokemonEntity() }
 
                 localDataSource.insertAllPokemon(listPokemon)
             }
-            .onError { error ->
-                Log.e("adrey", "error: $error")
-
+            .onError {
                 listPokemon = localDataSource.getAllPokemon()
             }
 

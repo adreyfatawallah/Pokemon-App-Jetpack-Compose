@@ -1,6 +1,7 @@
 package com.example.pokemonapp.feature.auth.presentation.screen.register
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +39,8 @@ import com.example.pokemonapp.component.resultWithAction
 import com.example.pokemonapp.feature.auth.presentation.component.PasswordTextField
 import com.example.pokemonapp.ui.theme.PokemonAppTheme
 import com.example.pokemonapp.ui.theme.defaultButtonModifier
+import com.example.pokemonapp.util.RequestState
+import com.skydoves.compose.stability.runtime.TraceRecomposition
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,26 +57,21 @@ fun RegisterScreen(
 
     LaunchedEffect(onRegisterState) {
         when(val state = onRegisterState) {
-            is OnRegisterState.Failure -> {
+            is RequestState.Success -> {
                 val result = snackbarHostState.showSnackbar(
-                    message = state.message,
+                    message = state.data,
                     actionLabel = lblOK,
                     duration = SnackbarDuration.Short
                 )
-                resultWithAction(
-                    result,
-                    viewModel::resetOnRegisterState
-                )
+                resultWithAction(result, navigateBack)
             }
-            is OnRegisterState.Success -> {
+            is RequestState.Error -> {
                 val result = snackbarHostState.showSnackbar(
                     message = state.message,
                     actionLabel = lblOK,
                     duration = SnackbarDuration.Short
                 )
-                resultWithAction(
-                    result,
-                    navigateBack
+                resultWithAction(result, viewModel::resetOnRegisterState
                 )
             }
             else -> { }
@@ -104,25 +102,28 @@ fun RegisterScreen(
             )
         }
     ) { innerPadding ->
-        when(onRegisterState) {
-            is OnRegisterState.Loading -> {
-                LoadingCard(modifier = Modifier.padding(innerPadding))
-            }
-            else -> {
-                RegisterForm(
-                    modifier = Modifier.padding(innerPadding),
-                    username = uiState.username,
-                    updateUsername = viewModel::updateUsername,
-                    isUsernameValid = uiState.isUsernameValid,
-                    password = uiState.password,
-                    updatePassword = viewModel::updatePassword,
-                    isPasswordValid = uiState.isPasswordValid,
-                    retypePassword = uiState.retypePassword,
-                    updateRetypePassword = viewModel::updateRetypePassword,
-                    isPasswordMatch = uiState.isPasswordMatch,
-                    register = viewModel::register,
-                    isIdle = onRegisterState is OnRegisterState.Idle
-                )
+        Box(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            when(onRegisterState) {
+                is RequestState.Loading -> {
+                    LoadingCard()
+                }
+                else -> {
+                    RegisterForm(
+                        username = uiState.username,
+                        updateUsername = viewModel::updateUsername,
+                        isUsernameValid = uiState.isUsernameValid,
+                        password = uiState.password,
+                        updatePassword = viewModel::updatePassword,
+                        isPasswordValid = uiState.isPasswordValid,
+                        retypePassword = uiState.retypePassword,
+                        updateRetypePassword = viewModel::updateRetypePassword,
+                        isPasswordMatch = uiState.isPasswordMatch,
+                        register = viewModel::register,
+                        isIdle = onRegisterState is RequestState.Idle
+                    )
+                }
             }
         }
     }
