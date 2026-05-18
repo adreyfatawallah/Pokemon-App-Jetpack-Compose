@@ -20,7 +20,7 @@ class AuthLocalDataSourceImpl(
         return query.insertUser(userEntity.username, userEntity.password).await()
     }
 
-    override fun selectUser(userEntity: UserEntity): UserModel? {
+    override suspend fun selectUser(userEntity: UserEntity): UserModel? {
         return query.selectUser(userEntity.username, userEntity.password).executeAsOneOrNull()?.toModel()
     }
 }

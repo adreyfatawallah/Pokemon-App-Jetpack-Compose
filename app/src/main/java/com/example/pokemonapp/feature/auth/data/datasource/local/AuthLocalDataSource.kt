@@ -6,5 +6,5 @@ import com.example.pokemonapp.feature.auth.domain.entity.UserEntity
 interface AuthLocalDataSource {
     suspend fun createUser(userEntity: UserEntity) : Long
 
-    fun selectUser(userEntity: UserEntity) : UserModel?
+    suspend fun selectUser(userEntity: UserEntity) : UserModel?
 }

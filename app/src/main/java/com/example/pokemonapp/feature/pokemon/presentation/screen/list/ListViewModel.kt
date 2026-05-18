@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.pokemonapp.feature.pokemon.domain.entity.PokemonEntity
 import com.example.pokemonapp.feature.pokemon.domain.repository.PokemonRepository
 import com.example.pokemonapp.util.RequestState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ListViewModel(
     private val repository: PokemonRepository,
@@ -25,7 +27,9 @@ class ListViewModel(
 
     private fun getPokemon(url: String? = null) {
         viewModelScope.launch {
-            val result = repository.getPokemon(url)
+            val result = withContext(Dispatchers.IO) {
+                repository.getPokemon(url)
+            }
             
             _uiState.update {
                 if (result.isNotEmpty()) RequestState.Success(result)

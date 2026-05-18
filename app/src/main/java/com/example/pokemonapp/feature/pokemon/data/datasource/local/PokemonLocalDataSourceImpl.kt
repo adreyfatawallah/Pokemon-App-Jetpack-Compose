@@ -15,7 +15,7 @@ class PokemonLocalDataSourceImpl(
 
     private val query = database.pokemonDatabaseQueries
 
-    override fun insertAllPokemon(pokemonList: List<PokemonEntity>) {
+    override suspend fun insertAllPokemon(pokemonList: List<PokemonEntity>) {
         query.transaction {
             pokemonList.forEach { pokemon ->
                 query.insertOrReplacePokemon(
@@ -26,7 +26,7 @@ class PokemonLocalDataSourceImpl(
         }
     }
 
-    override fun getAllPokemon(): List<PokemonEntity> {
+    override suspend fun getAllPokemon(): List<PokemonEntity> {
         return query.getAllPokemon().executeAsList()
             .map { it.toPokemonEntity() }
     }
